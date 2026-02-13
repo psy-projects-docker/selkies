@@ -78,14 +78,14 @@ jobs:
             - <"xvfb-fix.dockerfile"
         shell: bash
 
-      - name: Extract / directory from xvfb-fix image
+      - name: Extract /usr/bin directory from xvfb-fix image
         run: |
           docker create \
             --name "tmp_container" \
             "xvfb-fix"
 
           docker cp \
-            "tmp_container:/" \
+            "tmp_container:/usr/bin" \
             "./xvfb-fix"
 
           docker rm tmp_container
