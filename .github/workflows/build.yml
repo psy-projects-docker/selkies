@@ -70,35 +70,13 @@ jobs:
         run: tar -zcvf "selkies-frontend.tar.gz" "./build-out"
         shell: bash
 
-      - name: Build xvfb-fix Docker image
+      - name: Save xvfb-fix bin from base image
         run: |
-          docker build \
-            --progress plain \
-            --tag "xvfb-fix" \
-            - <"xvfb-fix.dockerfile"
-        shell: bash
+          IMAGE_NAME="lscr.io/linuxserver/xvfb:ubuntunoble"
+          OUTPUT_TAR="xvfb-fix.tar"
 
-      - name: Extract xvfb binary and create tar.gz
-        run: |
-          IMAGE_NAME="xvfb-fix"
-          CONTAINER_NAME="tmp_container"
-          OUTPUT_DIR="xvfb-fix"
-          OUTPUT_BIN="xvfb"
-          OUTPUT_TAR="xvfb-fix.tar.gz"
-
-          CONTAINER_ID="$(docker create --name "${CONTAINER_NAME}" "${IMAGE_NAME}")"
-
-          mkdir -p "${OUTPUT_DIR}"
-
-          docker export "${CONTAINER_ID}" \
-            | tar -xOf - "usr/bin/xvfb" \
-            > "${OUTPUT_DIR}/${OUTPUT_BIN}"
-
-          chmod +x "${OUTPUT_DIR}/${OUTPUT_BIN}"
-
-          tar -czf "${OUTPUT_TAR}" "${OUTPUT_DIR}"
-
-          docker rm "${CONTAINER_ID}"
+          docker pull "${IMAGE_NAME}"
+          docker save "${IMAGE_NAME}" -o "${OUTPUT_TAR}"
         shell: bash
 
       - name: Create Release.md file
@@ -107,7 +85,7 @@ jobs:
           ## Selkies Frontend
           ### Files:
             - selkies-frontend.tar.gz
-            - xvfb-fix.tar.gz
+            - xvfb-fix.tar
           EOF
         shell: bash
 
