@@ -1,0 +1,118 @@
+name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        default: "ubuntu-latest"
+        description: "runner"
+        type: choice
+        options:
+          - self-hosted
+          - ubuntu-latest
+          - windows-latest
+          - k8s
+        required: true
+
+jobs:
+  build:
+    runs-on: ${{inputs.runner || 'ubuntu-latest'}}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check files
+        run: |
+          printf "\n\n"
+
+          printf "\e[93m%s\e[0m\n" \
+            "RUNNER_WORKSPACE:     \"${RUNNER_WORKSPACE}\"" \
+            "GITHUB_WORKSPACE:     \"${GITHUB_WORKSPACE}\"" \
+            "GITHUB_ACTION_PATH:   \"${GITHUB_ACTION_PATH}\"" \
+            "---                   ---" \
+            "gh_token:             \"${GITHUB_TOKEN::8}****************\"" \
+            "---                   ---"
+
+          printf "\n\n"
+
+          pwd
+          tree -ahI ".git" --dirsfirst --du
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        shell: bash
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Selkies-Frontend Docker image
+        run: |
+          docker build \
+            --progress plain \
+            --tag "selkies-frontend" \
+            - <"selkies-frontend.dockerfile"
+        shell: bash
+
+      - name: Extract /build-out directory from Selkies-Frontend image
+        run: |
+          docker create \
+            --name "tmp_container" \
+            "selkies-frontend"
+
+          docker cp \
+            "tmp_container:/build-out" \
+            "./build-out"
+
+          docker rm tmp_container
+        shell: bash
+
+      - name: Create Selkies-Frontend tar archive
+        run: tar -zcvf "selkies-frontend.tar.gz" "./build-out"
+        shell: bash
+
+      - name: Build xvfb-fix Docker image
+        run: |
+          docker build \
+            --progress plain \
+            --tag "xvfb-fix" \
+            - <"xvfb-fix.dockerfile"
+        shell: bash
+
+      - name: Extract / directory from xvfb-fix image
+        run: |
+          docker create \
+            --name "tmp_container" \
+            "xvfb-fix"
+
+          docker cp \
+            "tmp_container:/" \
+            "./xvfb-fix"
+
+          docker rm tmp_container
+        shell: bash
+
+      - name: Create xvfb-fix tar archive
+        run: tar -zcvf "xvfb-fix.tar.gz" "./xvfb-fix"
+        shell: bash
+
+      - name: Create Release.md file
+        run: |
+          cat <<EOF >"release.md"
+          ## Selkies Frontend
+          ### Files:
+            - selkies-frontend.tar.gz
+            - xvfb-fix.tar.gz
+          EOF
+        shell: bash
+
+      - name: gh release create v0.0.1
+        run: |
+          gh release view "v0.0.1" &>/dev/null && gh release delete "v0.0.1"
+
+          gh release create "v0.0.1" \
+            --title "v0.0.1" \
+            --notes-file "release.md" \
+            --generate-notes \
+            *.tar.gz
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
