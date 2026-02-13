@@ -78,21 +78,27 @@ jobs:
             - <"xvfb-fix.dockerfile"
         shell: bash
 
-      - name: Extract /usr/bin directory from xvfb-fix image
+      - name: Extract xvfb binary and create tar.gz
         run: |
-          docker create \
-            --name "tmp_container" \
-            "xvfb-fix"
+          IMAGE_NAME="xvfb-fix"
+          CONTAINER_NAME="tmp_container"
+          OUTPUT_DIR="xvfb-fix"
+          OUTPUT_BIN="xvfb"
+          OUTPUT_TAR="xvfb-fix.tar.gz"
 
-          docker cp \
-            "tmp_container:/usr/bin" \
-            "./xvfb-fix"
+          CONTAINER_ID="$(docker create --name "${CONTAINER_NAME}" "${IMAGE_NAME}")"
 
-          docker rm tmp_container
-        shell: bash
+          mkdir -p "${OUTPUT_DIR}"
 
-      - name: Create xvfb-fix tar archive
-        run: tar -zcvf "xvfb-fix.tar.gz" "./xvfb-fix"
+          docker export "${CONTAINER_ID}" \
+            | tar -xOf - "usr/bin/xvfb" \
+            > "${OUTPUT_DIR}/${OUTPUT_BIN}"
+
+          chmod +x "${OUTPUT_DIR}/${OUTPUT_BIN}"
+
+          tar -czf "${OUTPUT_TAR}" "${OUTPUT_DIR}"
+
+          docker rm "${CONTAINER_ID}"
         shell: bash
 
       - name: Create Release.md file
