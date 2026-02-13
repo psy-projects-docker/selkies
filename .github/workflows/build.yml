@@ -45,19 +45,19 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Selkies-Frontend Docker image
+      - name: Build Selkies Docker image
         run: |
           docker build \
             --progress plain \
-            --tag "selkies-frontend" \
-            - <"selkies-frontend.dockerfile"
+            --tag "selkies" \
+            - <"selkies.dockerfile"
         shell: bash
 
-      - name: Extract /build-out directory from Selkies-Frontend image
+      - name: Extract /build-out directory from Selkies image
         run: |
           docker create \
             --name "tmp_container" \
-            "selkies-frontend"
+            "selkies"
 
           docker cp \
             "tmp_container:/build-out" \
@@ -66,42 +66,16 @@ jobs:
           docker rm tmp_container
         shell: bash
 
-      - name: Create Selkies-Frontend tar archive
-        run: tar -zcvf "selkies-frontend.tar.gz" "./build-out"
-        shell: bash
-
-      - name: Build xvfb-fix Docker image
-        run: |
-          docker build \
-            --progress plain \
-            --tag "xvfb-fix" \
-            - <"xvfb-fix.dockerfile"
-        shell: bash
-
-      - name: Extract / directory from xvfb-fix image
-        run: |
-          docker create \
-            --name "tmp_container" \
-            "xvfb-fix"
-
-          docker cp \
-            "tmp_container:/" \
-            "./xvfb-fix"
-
-          docker rm tmp_container
-        shell: bash
-
-      - name: Create xvfb-fix tar archive
-        run: tar -zcvf "xvfb-fix.tar.gz" "./xvfb-fix"
+      - name: Create Selkies tar archive
+        run: tar -zcvf "selkies.tar.gz" "./build-out"
         shell: bash
 
       - name: Create Release.md file
         run: |
           cat <<EOF >"release.md"
-          ## Selkies Frontend
+          ## Selkies
           ### Files:
-            - selkies-frontend.tar.gz
-            - xvfb-fix.tar.gz
+            - selkies.tar.gz
           EOF
         shell: bash
 

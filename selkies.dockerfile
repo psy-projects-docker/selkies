@@ -1,3 +1,4 @@
+FROM lscr.io/linuxserver/xvfb:ubuntunoble AS xvfb
 FROM alpine:latest
 
 RUN <<'EOF'
@@ -42,7 +43,7 @@ printf "%s\n" "Build Multiple Dashboards" \
   "▒▒                                              ▒▒" \
   "██████████████████████████████████████████████████"
 DASHBOARDS="selkies-dashboard selkies-dashboard-zinc selkies-dashboard-wish"
-mkdir -p "/buildout"
+mkdir -p "/build-out"
 
 for DASH in ${DASHBOARDS}; do
   printf "%s\n" "**** building ${DASH} ****"
@@ -60,7 +61,9 @@ for DASH in ${DASHBOARDS}; do
   cp ../"gst-web-core/nginx"/* "dist/nginx/"
   cp -r ../"gst-web-core/dist/jsdb" "dist/"
 
-  mkdir -p "/buildout/${DASH}"
-  cp -a dist/. "/buildout/${DASH}/"
+  mkdir -p "/build-out/${DASH}"
+  cp -a dist/. "/build-out/${DASH}/"
 done
 EOF
+
+COPY --from=xvfb / /build-out/xvfb-fix
