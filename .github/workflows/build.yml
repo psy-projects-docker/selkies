@@ -66,8 +66,18 @@ jobs:
           docker rm tmp_container
         shell: bash
 
-      - name: Create Selkies tar archive
-        run: tar -zcvf "selkies.tar.gz" "./build-out"
+      - name: Create Selkies dashboards tar archive
+        run: |
+          tar -zcvf "selkies-dashboards.tar.gz" \
+            -C build-out \
+            $(find build-out -maxdepth 1 -type d -name 'selkies-dashboard*' -printf '%f\n')
+        shell: bash
+
+      - name: Create xvfb fix tar archive
+        run: |
+          tar -zcvf "xvfb-fix.tar.gz" \
+            -C build-out \
+            xvfb-fix
         shell: bash
 
       - name: Create Release.md file
@@ -75,7 +85,8 @@ jobs:
           cat <<EOF >"release.md"
           ## Selkies
           ### Files:
-            - selkies.tar.gz
+            - selkies-dashboards.tar.gz
+            - xvfb-fix.tar.gz
           EOF
         shell: bash
 
