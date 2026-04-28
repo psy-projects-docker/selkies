@@ -90,12 +90,12 @@ jobs:
           EOF
         shell: bash
 
-      - name: gh release create v0.0.1
+      - name: gh release create v0.0.2
         run: |
-          gh release view "v0.0.1" &>/dev/null && gh release delete "v0.0.1"
+          gh release view "v0.0.2" &>/dev/null && gh release delete "v0.0.2"
 
-          gh release create "v0.0.1" \
-            --title "v0.0.1" \
+          gh release create "v0.0.2" \
+            --title "v0.0.2" \
             --notes-file "release.md" \
             --generate-notes \
             *.tar.gz
