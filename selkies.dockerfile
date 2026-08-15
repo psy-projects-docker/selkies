@@ -24,7 +24,7 @@ printf "%s\n" "Ingest Code" \
   "██████████████████████████████████████████████████"
 git clone "https://github.com/selkies-project/selkies.git" "/src"
 cd "/src"
-git checkout -f "1a9cd02b61e31e65939ac2453e3f119a8793d3f0"
+git checkout -f "348bc4f61da66198573e7e57db9a266aca1991d5"
 
 printf "%s\n" "Build Shared Core Library" \
   "██████████████████████████████████████████████████" \
